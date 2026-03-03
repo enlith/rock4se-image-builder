@@ -88,8 +88,8 @@ RUN chsh -s /bin/zsh root
 
 ## CREATE ZRAM-FILE
 RUN echo '# /etc/default/zramswap' > /etc/default/zramswap
-RUN echo "ZRAM_SWAPSIZE=512M" >> /etc/default/zramswap
-RUN echo "ZRAM_ALGORITHM=lz4" >> /etc/default/zramswap
+RUN echo "ZRAM_SWAPSIZE=1024M" >> /etc/default/zramswap
+RUN echo "ZRAM_ALGORITHM=zstd" >> /etc/default/zramswap
 
 ## CONFIGURE THE KERNEL COMMANDLINE
 RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw earlycon consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1" > /etc/kernel/cmdline
