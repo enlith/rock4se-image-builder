@@ -1,116 +1,90 @@
-# SORRY I made a mistake I repair the script at the moment
+# rock4se-image-builder (arm64-native fork)
 
-# rock4se-image-builder v2.6  >!UPDATED!<
+Build SD-Card images for Radxa Rock 4 SE on an arm64 host (e.g., Debian arm64 VM on Apple Silicon).
 
-## On first boot of the builds the device reboots after resizing root filesystem
+Forked from [byte4RR4Y/rock4se-image-builder](https://github.com/byte4RR4Y/rock4se-image-builder) with the following changes:
+- Native arm64 build support (no cross-compilation or QEMU needed)
+- Three kernel options: Radxa BSP, generic Debian, or mainline
+- RK3399-T hardware-optimized kernel config for mainline builds
+- OS-level performance tunings for SD/eMMC storage
+- Bluetooth support
 
-### You can choose the latest availible Linux Kernel!!!
+## How it works
+1. Builds the root filesystem inside a Docker container
+2. Installs the selected kernel
+3. Flashes the u-boot bootloader and root filesystem to an SD-Card image
 
-For questions or suggestions use the Discussions forum or Email.
+## Requirements
+- Debian arm64 host (tested on Debian 13 arm64 VM via UTM on M1 Mac)
+- Docker
 
-#####################################################################################
-## Changes
-    - Fixed some issues with the Dockerfile
-    - Added isntallation of ZSH with features
-    - RW mode for qemu only to configure the display(standard is ro)
-    - Added an option for an interactive shell inside the build container
-    - Fixed issues with some Desktop installations
-    - Removed installing otion for additional software(because of the image size)
-    - Added qemu TPM emulation
-    - Uploaded .zshrc file (Sorry I forgot it)
-    - Updated the gui
-    - Compile and install latest Kernel !!! At the moment it's 6.8.0-rc6 (2024-02-29)
-    - Added a kernelupdater.sh script to the boot folder of the builds
-    - Added option to install latest or standard Kernel
-    - Added installation of kernel headers.
-    - !!! ADDED EMULATION OF CUSTOM KERNELS WITH GRAPHICS SUPPORT !!!
-    - Removed QEMU scripts because they misconfigure the displaymanager of custom Kernels
-    - Removed the gui
-    - Added 'autoinstaller.sh' to install Radxa Metapackage for Rock4SE on first inet-connection
-    - Improved 'rc.local', 'Dockerfile' and 'build.sh'
-    - Improved 'makekernel.sh'
-    - Replace '/etc/init.d/resize2fs' and 'resizeroot' script with 'rootresize.service'
-    - Created 'rock-emulator.sh' to emulate builds; start it with:
-      'sudo ./rock-emulator.sh IMAGEFILE.img'
-      for more information about ro and rw mode.
-    - Added Hardware-overlays and 'rsetup'(Do not use it for overclocking!)
-    - Fixed issue with 'rootresize.service'
-    
-## INFO: I try to add installation of Headers for custom Kernels
+## Installation
+```bash
+cd rock4se-image-builder
+chmod +x install.sh
+sudo ./install.sh
+```
 
-#####################################################################################
-# This script builds SD-Card images for Radxa Rock 4 SE as it follows:
-    - Building the root-filesystem inside a docker container.
-    - Installing standard Kernel or compiling and installing the latest Linux Kernel.
-    - Flash the u-boot bootloader(2024-01) and the root filesystem to the SD-Card image.
+## Build
+```bash
+sudo ./build.sh
+```
+This launches an interactive menu. Or use CLI flags:
 
-# Installation: Clone this repository and...
-----------------------
-    cd rock4se-image-builder
-    chmod +x install.sh
-    sudo ./install.sh
-----------------------
+```bash
+sudo ./build.sh -s bookworm -d none -k radxa -H no -u debian -p <password> -b
+```
 
-# To build an SD-Card image, just simply type:
-    sudo ./build.sh
+## Kernel Options
 
-You will find your image in the output folder.
+| Option | Flag | Description |
+|---|---|---|
+| Radxa BSP (recommended) | `-k radxa` | Radxa-patched kernel (6.1.x) with full Rock 4 SE hardware support: VPU, ISP, RGA, board-specific DTB |
+| Generic Debian | `-k standard` | Stock Debian arm64 kernel. Works but lacks some Rockchip-specific drivers |
+| Mainline | `-k latest` | Compiles latest mainline kernel from source. Add `-V 6.19.4` to pin a version. Partial RK3399 support |
 
-#### If you make a build without desktop you can connect your wireless with:
-     nmcli device wifi connect "NAME_OF_YOUR_NETWORK" --ask
-Now just enter your password and press [RETURN]
+## CLI Options
+```
+-h, --help                          Show help
+-s, --suite SUITE                   Debian suite (bookworm, trixie, sid, etc.)
+-k, --kernel radxa/standard/latest  Kernel to install
+-V, --kernel-version VERSION        Pin mainline kernel version (e.g., 6.19.4)
+-H, --headers yes/no                Install kernel headers
+-d, --desktop DESKTOP               Desktop (none/xfce4/gnome/mate/cinnamon/lxqt/lxde/kde/budgie)
+-u, --username USERNAME             Sudo user username
+-p, --password PASSWORD             Sudo user password
+-i, --interactive yes/no            Interactive shell in build container
+-b                                  Build without prompting
+```
 
-# Adding custom packages to install
-    -If you want to add packages to install, append it to config/apt-packages.txt
-     instead of modifying the Dockerfile, For each package add a new line.
+## Examples
+```bash
+# Radxa BSP kernel, CLI only (recommended)
+sudo ./build.sh -s bookworm -d none -k radxa -H no -u debian -p builder -b
 
-# Required Host system:
-  - Debian/amd64 (bullseye, bookworm, MX 21 and MX23 are tested)
-  - maybe Ubuntu works too, but the depencies are slightly different(install.sh is not working)
+# Generic Debian kernel with XFCE desktop
+sudo ./build.sh -s bookworm -d xfce4 -k standard -H yes -u debian -p builder -b
 
-# What you can build?
-##DEBIAN:
-  - Testing
-  - Experimental
-  - Trixie
-  - Sid
-  - Bookworm
-  - Bullseye
+# Mainline kernel 6.19.4
+sudo ./build.sh -s bookworm -d none -k latest -V 6.19.4 -H no -u debian -p builder -b
+```
 
-##Currently supported desktops:
-  - none     (Command line interface/tested)
-  - xfce     (tested)
-  - gnome    (tested)
-  - mate
-  - cinnamon
-  - lxqt
-  - lxde
-  - unity
-  - budgie
-  - kde plasma
+## Hardware Optimizations
+The following tunings are applied to all builds for the Rock 4 SE (RK3399-T):
+- I/O scheduler: `mq-deadline` for SD/eMMC
+- CPU governor: `schedutil` for big.LITTLE (A72 + A53)
+- ZRAM: 1GB with zstd compression
+- tmpfs on `/tmp` (256MB) to reduce SD card wear
+- Sysctl: `vm.swappiness=10`, `vm.dirty_ratio=5`, `vm.dirty_background_ratio=2`
 
-# Automating the build process by using the commandline is possible
-Type './build.sh -h'
----------------------------------------------------
-    -h, --help                      Show this help message and exit
-    -s, --suite SUITE               Choose the Debian suite (e.g., testing, experimental, trixie)
-    -k, --kernel latest/standard    Choose which kernel to install
-    -H, --headers yes/no            Install Kernelheaders (only with standard Kernel)
-    -d, --desktop DESKTOP           Choose the desktop environment (e.g., xfce4, kde, none)
-    -i, --interactive yes/no        Start an interactive shell in the docker container (yes/no)
-                                    Standard is set to 'no'.
-                                    This only has an effect in kombination with -d or --desktop
-    -u, --username USERNAME         Enter the username for the sudo user
-    -p, --password PASSWORD         Enter the password for the sudo user
-    -b                              Build the image with the specified configuration without asking
----------------------------------------------------
+## Flashing
+See [FLASH_SD_CARD.md](FLASH_SD_CARD.md) for instructions.
 
-For example to build Debian testing with XFCE with latest Kernel, no Headers and creaating a sudo user with username debian and password 123456:
----------------------------------------------------
-     ./build -s testing -d xfce4 -k latest -H no -u debian -p 123456 -b
----------------------------------------------------
+## Adding custom packages
+Append package names (one per line) to `config/apt-packages.txt`.
 
+## Supported desktops
+none, xfce, gnome, mate, cinnamon, lxqt, lxde, unity, budgie, kde plasma
 
----------------------------------------------------
- # Contact to the developer: byte4rr4y@gmail.com #
----------------------------------------------------
+## Credits
+Original project by [byte4RR4Y](https://github.com/byte4RR4Y/rock4se-image-builder) — byte4rr4y@gmail.com
