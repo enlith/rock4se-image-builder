@@ -314,7 +314,7 @@ if [[ "$BUILD" == "yes" ]]; then
 ##########################################################################################################################
     if [ "$KERNEL" == "latest" ]; then
       echo "0" > config/kernel_status
-      xfce4-terminal --title="Building Kernel" --command="config/makekernel.sh $HEADERS" &
+      config/makekernel.sh $HEADERS &
     fi
 # Building a docker image for the root filesystem creation
 ##########################################################################################################################    
@@ -326,7 +326,7 @@ if [[ "$BUILD" == "yes" ]]; then
     docker build --build-arg "SUITE="$SUITE --build-arg "DESKTOP="$DESKTOP --build-arg "USERNAME="$USERNAME --build-arg "PASSWORD="$PASSWORD --build-arg "KERNEL="$KERNEL --build-arg "HEADERS="$HEADERS -t debian:finest -f config/Dockerfile .
 # Create a docker container with the previous created docker image
 ##########################################################################################################################    
-    docker run --platform=aarch64 -dit --name debiancontainer debian:finest /bin/bash  
+    docker run -dit --name debiancontainer debian:finest /bin/bash  
 
 # If latest Kernel was chosen waiting for finished cross-compilation and install it inside the container
 ##########################################################################################################################

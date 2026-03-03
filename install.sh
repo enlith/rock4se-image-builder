@@ -6,11 +6,9 @@ if [ "$UID" -ne 0 ]; then
     exit 1
 fi
 
-apt update -y && apt install -y git bc bison flex libssl-dev make libc6-dev libncurses5-dev crossbuild-essential-arm64 docker.io apparmor qemu-user-static binfmt-support qemu-user qemu-system qemu-utils xfce4-terminal qemu-system-aarch64 u-boot-qemu swtpm qemu-system-gui
+apt update -y && apt install -y git bc bison flex libssl-dev make libc6-dev libncurses5-dev build-essential docker.io apparmor whiptail
 systemctl start docker
 systemctl enable docker
 chmod +x ./*
 chmod +x config/*
-
-docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
  
