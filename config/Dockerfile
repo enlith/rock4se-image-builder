@@ -75,7 +75,7 @@ COPY config/overlays /boot
 
 ## CREATE SUDO USER
 RUN useradd -m -s /bin/bash ${USERNAME}
-RUN echo "${PASSWORD}:${PASSWORD}" | chpasswd
+RUN echo "${USERNAME}:${PASSWORD}" | chpasswd
 RUN usermod -aG sudo ${USERNAME}
 
 ## SETTING UP ZSH
