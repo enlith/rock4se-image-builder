@@ -35,6 +35,19 @@ This launches an interactive menu. Or use CLI flags:
 sudo ./build.sh -s bookworm -d none -k radxa -H no -u debian -p <password> -b
 ```
 
+### NVMe Root Support
+Add `-n yes` to enable automatic rootfs migration from SD card to NVMe on first boot:
+```bash
+sudo ./build.sh -s bookworm -d none -k radxa -H no -n yes -u debian -p <password> -b
+```
+On first boot with an M.2 NVMe drive installed, the system will:
+1. Partition and format the NVMe drive
+2. Copy the entire rootfs from SD to NVMe
+3. Update boot config to use NVMe as root
+4. Reboot into the NVMe-backed system
+
+The SD card remains as the boot device (`/boot`), while NVMe handles everything else with optimized I/O settings.
+
 ## Kernel Options
 
 | Option | Flag | Description |
@@ -49,6 +62,7 @@ sudo ./build.sh -s bookworm -d none -k radxa -H no -u debian -p <password> -b
 -s, --suite SUITE                   Debian suite (bookworm, trixie, sid, etc.)
 -k, --kernel radxa/standard/latest  Kernel to install
 -V, --kernel-version VERSION        Pin mainline kernel version (e.g., 6.19.4)
+-n, --nvme yes/no                   Enable NVMe root migration on first boot
 -H, --headers yes/no                Install kernel headers
 -d, --desktop DESKTOP               Desktop (none/xfce4/gnome/mate/cinnamon/lxqt/lxde/kde/budgie)
 -u, --username USERNAME             Sudo user username

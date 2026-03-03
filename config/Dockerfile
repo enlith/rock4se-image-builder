@@ -6,9 +6,11 @@ ARG USERNAME
 ARG PASSWORD
 ARG KERNEL
 ARG HEADERS
+ARG NVME
 
 ENV HEADERS=$HEADERS
 ENV KERNEL=$KERNEL
+ENV NVME=$NVME
 ENV DESKTOP=$DESKTOP
 ENV ADDITIONAL=$ADDITIONAL
 ENV USERNAME=$USERNAME
@@ -22,7 +24,7 @@ SHELL ["/bin/bash", "-c"]
 ## INSTALL ESSETNIALS AND OFTEN USED TOOLS
 RUN apt update -y && apt upgrade -y && apt install -y apt-utils dialog aptitude
 RUN aptitude install -y '?priority(required)' '?priority(important)' '?priority(standard)'
-RUN apt install -y nano wget curl sudo gpg gpg-agent network-manager zip unzip e2fsprogs git zsh zsh-autosuggestions zsh-syntax-highlighting kmod wireless-tools net-tools inetutils* initramfs-tools network-manager usbutils tar zip unzip bzip2 u-boot-menu pulseaudio pulseaudio-module-bluetooth ntpsec locales parted util-linux u-boot-tools firmware-brcm80211 iw wireless-regdb bluetooth bluez
+RUN apt install -y nano wget curl sudo gpg gpg-agent network-manager zip unzip e2fsprogs git zsh zsh-autosuggestions zsh-syntax-highlighting kmod wireless-tools net-tools inetutils* initramfs-tools network-manager usbutils tar zip unzip bzip2 u-boot-menu pulseaudio pulseaudio-module-bluetooth ntpsec locales parted util-linux u-boot-tools firmware-brcm80211 iw wireless-regdb bluetooth bluez rsync nvme-cli
 
 ## INSTALLATION OF THE DEB-PACKAGES in 'apt-packages.txt'
 COPY config/apt-packages.txt /root
@@ -135,6 +137,16 @@ RUN if [[ $KERNEL != "latest" ]]; then \
 ## INSTALL fake-hwclock TO PERSIST TIME ACROSS REBOOTS
 ## (RK808 RTC has no battery backup, defaults to 2013 on cold boot which breaks NM DHCP renewal)
 RUN apt-get install -y fake-hwclock
+
+## NVME ROOT MIGRATION (optional)
+COPY config/migrate-to-nvme.sh /usr/local/bin/
+COPY config/nvme-migrate.service /etc/systemd/system/
+RUN chmod +x /usr/local/bin/migrate-to-nvme.sh
+RUN if [ "$NVME" = "yes" ]; then \
+        systemctl enable nvme-migrate.service \
+    ; else \
+        rm /usr/local/bin/migrate-to-nvme.sh /etc/systemd/system/nvme-migrate.service \
+    ; fi
 
 ## CLEANING APT-FILES
 RUN dpkg --configure -a --force-all 2>/dev/null; apt-get -f install -y 2>/dev/null; apt autoremove -y; apt autoclean
