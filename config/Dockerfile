@@ -139,7 +139,7 @@ COPY config/migrate-to-nvme.sh /usr/local/bin/
 COPY config/nvme-migrate.service /etc/systemd/system/
 RUN chmod +x /usr/local/bin/migrate-to-nvme.sh
 RUN if [ "$NVME" = "yes" ]; then \
-        systemctl enable nvme-migrate.service \
+        ln -sf /etc/systemd/system/nvme-migrate.service /etc/systemd/system/multi-user.target.wants/nvme-migrate.service \
     ; else \
         rm /usr/local/bin/migrate-to-nvme.sh /etc/systemd/system/nvme-migrate.service \
     ; fi
