@@ -132,7 +132,7 @@ RUN if [[ $KERNEL != "latest" ]]; then \
     ; fi
 
 ## CLEANING APT-FILES
-RUN apt autoremove -y && apt autoclean
+RUN dpkg --configure -a --force-all 2>/dev/null; apt-get -f install -y 2>/dev/null; apt autoremove -y; apt autoclean
 
 ## SYSCTL TUNINGS FOR SD/eMMC AND 4GB RAM
 RUN echo '# Rock 4 SE optimizations' > /etc/sysctl.d/99-rock4se.conf \
