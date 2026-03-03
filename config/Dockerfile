@@ -1,5 +1,5 @@
 ARG SUITE
-FROM --platform=aarch64 arm64v8/debian:${SUITE}
+FROM arm64v8/debian:${SUITE}
 ARG DESKTOP
 ARG ADDITIONAL
 ARG USERNAME
