@@ -97,11 +97,14 @@ RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw
 
 ## KERNEL INSTALLATION
 RUN if [ "$KERNEL" = "radxa" ]; then \
-        apt install -y --no-install-recommends linux-image-6.1.115-8-rk2501 || true \
-     && apt install -y linux-image-rock-4se || dpkg --configure -a --force-all \
+        apt-get download linux-image-rock-4se linux-image-6.1.115-8-rk2501 radxa-overlays-dkms 2>/dev/null; \
+        dpkg --force-depends --force-configure-any -i linux-image-6.1.115-8-rk2501_*.deb || true; \
+        dpkg --force-depends --force-configure-any -i radxa-overlays-dkms_*.deb || true; \
+        dpkg --force-depends --force-configure-any -i linux-image-rock-4se_*.deb || true; \
+        rm -f *.deb \
     ; fi
 RUN if [ "$KERNEL" = "radxa" ] && [ "$HEADERS" = "yes" ]; then \
-        apt install -y linux-headers-rock-4se || dpkg --configure -a --force-all \
+        apt install -y linux-headers-rock-4se || true \
     ; fi
 RUN if [ "$KERNEL" = "standard" ]; then \
         apt install -y linux-image-arm64 \
