@@ -14,7 +14,10 @@ usage() {
     echo "Options:"
     echo "  -h, --help                      Show this help message and exit"
     echo "  -s, --suite SUITE               Choose the Debian suite (e.g., testing, experimental, trixie)"
-    echo "  -k, --kernel latest/standard    Choose which kernel to install"
+    echo "  -k, --kernel radxa/standard/latest  Choose which kernel to install"
+    echo "                                      radxa: Radxa BSP kernel with full Rock 4 SE hardware support (recommended)"
+    echo "                                      standard: Generic Debian arm64 kernel"
+    echo "                                      latest: Compile mainline kernel from source"
     echo "  -V, --kernel-version VERSION    Specify kernel version (e.g., 6.19.4) when using latest"
     echo "  -H, --headers yes/no            Install Kernel headers(only works with standard Kernel)"
     echo "  -d, --desktop DESKTOP           Choose the desktop environment."
@@ -117,15 +120,19 @@ rm choice.txt
 # Here we choose the Kernel to install
 ##########################################################################################################################
 whiptail --title "Menu" --menu "Choose Kernel to install" 20 65 6 \
-"1" "Standardkernel of the Debian Suite" \
-"2" "Download and compile latest availible Kernel" 2> choice.txt
+"1" "Radxa BSP kernel (full Rock 4 SE support, recommended)" \
+"2" "Standardkernel of the Debian Suite" \
+"3" "Download and compile latest availible Kernel" 2> choice.txt
 choice=$(cat choice.txt)
 
 case $choice in
   1)
-    echo "KERNEL=standard" >> .config
+    echo "KERNEL=radxa" >> .config
     ;;
   2)
+    echo "KERNEL=standard" >> .config
+    ;;
+  3)
     echo "KERNEL=latest" >> .config
     ;;
   *)
@@ -137,7 +144,7 @@ rm choice.txt
 # Here we choose installation of the kernel headers
 ##########################################################################################################################
 whiptail --title "Menu" --menu "KERNEL HEADERS" 20 65 6 \
-"1" "Install Kernel headers(only works with standard Kernel)" \
+"1" "Install Kernel headers(only works with standard/radxa Kernel)" \
 "2" "Do not install Kernel headers" 2> choice.txt
 choice=$(cat choice.txt)
 
@@ -346,7 +353,7 @@ if [[ "$BUILD" == "yes" ]]; then
       docker exec debiancontainer bash -c 'u-boot-update'
       rm kernel-*.zip
     else
-      echo "standard" > config/release
+      echo "$KERNEL" > config/release
     fi
 
 # If interactive shell was selected start it
