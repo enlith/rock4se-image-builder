@@ -92,7 +92,7 @@ RUN echo "ZRAM_SWAPSIZE=1024M" >> /etc/default/zramswap
 RUN echo "ZRAM_ALGORITHM=zstd" >> /etc/default/zramswap
 
 ## CONFIGURE THE KERNEL COMMANDLINE
-RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw earlycon consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1" > /etc/kernel/cmdline
+RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 elevator=mq-deadline" > /etc/kernel/cmdline
 
 ## IF STANDARD KERNEL IS CHOSEN INSTALL IT AND ITS HEADERS
 RUN if [ "$KERNEL" = "standard" ]; then \
@@ -119,4 +119,20 @@ RUN if [[ $KERNEL == "standard" ]]; then \
 
 ## CLEANING APT-FILES
 RUN apt autoremove -y && apt autoclean
+
+## SYSCTL TUNINGS FOR SD/eMMC AND 4GB RAM
+RUN echo '# Rock 4 SE optimizations' > /etc/sysctl.d/99-rock4se.conf \
+ && echo 'vm.swappiness=10' >> /etc/sysctl.d/99-rock4se.conf \
+ && echo 'vm.dirty_ratio=5' >> /etc/sysctl.d/99-rock4se.conf \
+ && echo 'vm.dirty_background_ratio=2' >> /etc/sysctl.d/99-rock4se.conf \
+ && echo 'vm.vfs_cache_pressure=75' >> /etc/sysctl.d/99-rock4se.conf \
+ && echo 'vm.dirty_writeback_centisecs=500' >> /etc/sysctl.d/99-rock4se.conf
+
+## TMPFS FOR /tmp TO REDUCE SD CARD WEAR
+RUN echo 'tmpfs /tmp tmpfs defaults,nosuid,nodev,size=256M 0 0' >> /etc/fstab
+
+## DEFAULT CPU GOVERNOR TO SCHEDUTIL FOR big.LITTLE EFFICIENCY
+RUN mkdir -p /etc/tmpfiles.d \
+ && echo 'w /sys/devices/system/cpu/cpufreq/policy0/scaling_governor - - - - schedutil' > /etc/tmpfiles.d/cpu-governor.conf \
+ && echo 'w /sys/devices/system/cpu/cpufreq/policy4/scaling_governor - - - - schedutil' >> /etc/tmpfiles.d/cpu-governor.conf
 
