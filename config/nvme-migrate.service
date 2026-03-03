@@ -1,0 +1,12 @@
+[Unit]
+Description=Migrate rootfs from SD card to NVMe on first boot
+After=local-fs.target rootresize.service
+ConditionPathExists=/usr/local/bin/migrate-to-nvme.sh
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/migrate-to-nvme.sh
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

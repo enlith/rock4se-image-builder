@@ -19,6 +19,7 @@ usage() {
     echo "                                      standard: Generic Debian arm64 kernel"
     echo "                                      latest: Compile mainline kernel from source"
     echo "  -V, --kernel-version VERSION    Specify kernel version (e.g., 6.19.4) when using latest"
+    echo "  -n, --nvme yes/no               Enable NVMe root migration on first boot"
     echo "  -H, --headers yes/no            Install Kernel headers(only works with standard Kernel)"
     echo "  -d, --desktop DESKTOP           Choose the desktop environment."
     echo "                                  (none/xfce4/gnome/cinnamon/lxqt/lxde/unity/budgie/kde)"
@@ -46,6 +47,7 @@ while [[ "$#" -gt 0 ]]; do
         -s|--suite) SUITE="$2"; shift ;;
         -k|--kernel) KERNEL="$2"; shift ;;
         -V|--kernel-version) KERNEL_VERSION="$2"; shift ;;
+        -n|--nvme) NVME="$2"; shift ;;
         -H|--headers) HEADERS="$2"; shift ;;
         -d|--desktop) DESKTOP="$2"; shift ;;
         -u|--username) USERNAME="$2"; shift ;;
@@ -68,6 +70,8 @@ rm .rootfs.tar
 rm -rf .rootfs/
 rm config/rootfs_size.txt
 echo ""
+# Default NVME to no if not specified
+NVME=${NVME:-no}
 # Check if arguments are missing
 ##########################################################################################################################
 if [ -z "$SUITE" ] || [ -z "$DESKTOP" ] || [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] || [ -z "$KERNEL" ] || [ -z "$HEADERS" ]; then
@@ -332,7 +336,7 @@ if [[ "$BUILD" == "yes" ]]; then
     docker kill debiancontainer
     docker rm debiancontainer
     docker rmi debian:finest
-    docker build --build-arg "SUITE="$SUITE --build-arg "DESKTOP="$DESKTOP --build-arg "USERNAME="$USERNAME --build-arg "PASSWORD="$PASSWORD --build-arg "KERNEL="$KERNEL --build-arg "HEADERS="$HEADERS -t debian:finest -f config/Dockerfile .
+    docker build --build-arg "SUITE="$SUITE --build-arg "DESKTOP="$DESKTOP --build-arg "USERNAME="$USERNAME --build-arg "PASSWORD="$PASSWORD --build-arg "KERNEL="$KERNEL --build-arg "HEADERS="$HEADERS --build-arg "NVME="$NVME -t debian:finest -f config/Dockerfile .
 # Create a docker container with the previous created docker image
 ##########################################################################################################################    
     docker run -dit --name debiancontainer debian:finest /bin/bash  
