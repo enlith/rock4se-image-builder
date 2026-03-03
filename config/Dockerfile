@@ -95,9 +95,18 @@ RUN echo "ZRAM_ALGORITHM=zstd" >> /etc/default/zramswap
 ## CONFIGURE THE KERNEL COMMANDLINE
 RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 elevator=mq-deadline" > /etc/kernel/cmdline
 
-## IF STANDARD KERNEL IS CHOSEN INSTALL IT AND ITS HEADERS
+## KERNEL INSTALLATION
+RUN if [ "$KERNEL" = "radxa" ]; then \
+        apt install -y linux-image-rock-4se \
+    ; fi
+RUN if [ "$KERNEL" = "radxa" ] && [ "$HEADERS" = "yes" ]; then \
+        apt install -y linux-headers-rock-4se \
+    ; fi
 RUN if [ "$KERNEL" = "standard" ]; then \
-        apt install -y linux-image-rock-4se linux-headers-rock-4se \
+        apt install -y linux-image-arm64 \
+    ; fi
+RUN if [ "$KERNEL" = "standard" ] && [ "$HEADERS" = "yes" ]; then \
+        apt install -y linux-headers-arm64 \
     ; fi
 
 ## INSTALL AUTO RESIZE ROOT FILESYSTEM SERVICE
@@ -114,7 +123,7 @@ RUN chmod +x /etc/rc.local
 ## IF LATEST KERNEL IS CHOSEN ADDING A KERNEL UPDATER SCRIPT IN '/boot'
 COPY config/kernelupdater.sh /boot
 RUN chmod +x /boot/kernelupdater.sh
-RUN if [[ $KERNEL == "standard" ]]; then \
+RUN if [[ $KERNEL != "latest" ]]; then \
     rm /boot/kernelupdater.sh \
     ; fi
 
