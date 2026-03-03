@@ -15,6 +15,7 @@ usage() {
     echo "  -h, --help                      Show this help message and exit"
     echo "  -s, --suite SUITE               Choose the Debian suite (e.g., testing, experimental, trixie)"
     echo "  -k, --kernel latest/standard    Choose which kernel to install"
+    echo "  -V, --kernel-version VERSION    Specify kernel version (e.g., 6.19.4) when using latest"
     echo "  -H, --headers yes/no            Install Kernel headers(only works with standard Kernel)"
     echo "  -d, --desktop DESKTOP           Choose the desktop environment."
     echo "                                  (none/xfce4/gnome/cinnamon/lxqt/lxde/unity/budgie/kde)"
@@ -41,6 +42,7 @@ while [[ "$#" -gt 0 ]]; do
         -h|--help) usage;;
         -s|--suite) SUITE="$2"; shift ;;
         -k|--kernel) KERNEL="$2"; shift ;;
+        -V|--kernel-version) KERNEL_VERSION="$2"; shift ;;
         -H|--headers) HEADERS="$2"; shift ;;
         -d|--desktop) DESKTOP="$2"; shift ;;
         -u|--username) USERNAME="$2"; shift ;;
@@ -314,7 +316,7 @@ if [[ "$BUILD" == "yes" ]]; then
 ##########################################################################################################################
     if [ "$KERNEL" == "latest" ]; then
       echo "0" > config/kernel_status
-      config/makekernel.sh $HEADERS &
+      config/makekernel.sh $HEADERS $KERNEL_VERSION &
     fi
 # Building a docker image for the root filesystem creation
 ##########################################################################################################################    

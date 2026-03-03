@@ -1,11 +1,16 @@
 #! /bin/bash
 
 HEADERS=$1
+KERNEL_VERSION=$2
 CWD=$PWD
 OUTDIR=${CWD}
 CPUS=$(nproc)
 
-git clone --depth=1 https://github.com/torvalds/linux
+if [ -n "$KERNEL_VERSION" ]; then
+  git clone --depth=1 --branch "v${KERNEL_VERSION}" https://github.com/torvalds/linux
+else
+  git clone --depth=1 https://github.com/torvalds/linux
+fi
 cd linux
 
 yes "" | make ARCH=arm64 defconfig
