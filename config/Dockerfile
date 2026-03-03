@@ -68,6 +68,7 @@ RUN dpkg -i deb.deb
 RUN rm -f deb.deb
 RUN bash -c 'source /etc/os-release'
 RUN bash -c 'tee /etc/apt/sources.list.d/radxa.list <<< "deb [signed-by=/usr/share/keyrings/radxa-archive-keyring.gpg] https://radxa-repo.github.io/bookworm/ bookworm main"'
+RUN bash -c 'tee /etc/apt/sources.list.d/radxa-rk3399t.list <<< "deb [signed-by=/usr/share/keyrings/radxa-archive-keyring.gpg] https://radxa-repo.github.io/rk3399t-bookworm/ rk3399t-bookworm main"'
 RUN apt update -y && apt install -y radxa-firmware rsetup
 
 ## Copy the overlay files into the boot folder
@@ -96,7 +97,7 @@ RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw
 
 ## IF STANDARD KERNEL IS CHOSEN INSTALL IT AND ITS HEADERS
 RUN if [ "$KERNEL" = "standard" ]; then \
-        apt install -y linux-image-arm64 linux-headers-arm64 \
+        apt install -y linux-image-rock-4se linux-headers-rock-4se \
     ; fi
 
 ## INSTALL AUTO RESIZE ROOT FILESYSTEM SERVICE
