@@ -87,7 +87,8 @@ RUN chown root:root /root/.zshrc
 RUN chsh -s /bin/zsh ${USERNAME}
 RUN chsh -s /bin/zsh root
 
-## CREATE ZRAM-FILE
+## ZRAM
+RUN apt-get install -y zram-tools
 RUN echo '# /etc/default/zramswap' > /etc/default/zramswap
 RUN echo "ZRAM_SWAPSIZE=1024M" >> /etc/default/zramswap
 RUN echo "ZRAM_ALGORITHM=zstd" >> /etc/default/zramswap
