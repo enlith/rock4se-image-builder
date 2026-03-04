@@ -171,8 +171,8 @@ RUN if [ "$NVME" = "yes" ]; then \
     ; fi
 
 ## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
-RUN dpkg --remove --force-remove-reinstreq radxa-overlays-dkms 2>/dev/null || true \
- && apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
+RUN dpkg --purge --force-all radxa-overlays-dkms 2>/dev/null; \
+    apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
  && adduser xrdp ssl-cert \
  && systemctl enable xrdp
 RUN if [ "$KERNEL" = "radxa" ]; then \
