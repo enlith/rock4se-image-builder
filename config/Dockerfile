@@ -161,6 +161,51 @@ RUN if [ "$NVME" = "yes" ]; then \
         rm /usr/local/bin/migrate-to-nvme.sh /etc/systemd/system/nvme-migrate.service \
     ; fi
 
+## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
+RUN apt-get install -y xrdp \
+ && sed -i 's/^port=3389/port=3389/' /etc/xrdp/xrdp.ini \
+ && adduser xrdp ssl-cert \
+ && systemctl enable xrdp
+RUN if [[ $DESKTOP == "xfce4" ]]; then \
+        echo "xfce4-session" > /etc/skel/.xsession \
+    ; fi
+RUN if [[ $DESKTOP == "kde" ]]; then \
+        echo "startplasma-x11" > /etc/skel/.xsession \
+    ; fi
+RUN if [[ $DESKTOP == "gnome" ]]; then \
+        echo "gnome-session" > /etc/skel/.xsession \
+    ; fi
+RUN if [[ $DESKTOP == "cinnamon" ]]; then \
+        echo "cinnamon-session" > /etc/skel/.xsession \
+    ; fi
+RUN if [[ $DESKTOP == "mate" ]]; then \
+        echo "mate-session" > /etc/skel/.xsession \
+    ; fi
+RUN if [[ $DESKTOP == "lxqt" ]]; then \
+        echo "startlxqt" > /etc/skel/.xsession \
+    ; fi
+RUN if [[ $DESKTOP == "lxde" ]]; then \
+        echo "startlxde" > /etc/skel/.xsession \
+    ; fi
+RUN if [[ $DESKTOP == "budgie" ]]; then \
+        echo "budgie-desktop" > /etc/skel/.xsession \
+    ; fi
+## POLKIT RULE TO ALLOW COLORD FOR XRDP (prevents auth dialog blocking RDP sessions)
+RUN mkdir -p /etc/polkit-1/localauthority/50-local.d \
+ && cat > /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla <<'EOF'
+[Allow Colord all Users]
+Identity=unix-user:*
+Action=org.freedesktop.color-manager.create-device;org.freedesktop.color-manager.create-profile;org.freedesktop.color-manager.delete-device;org.freedesktop.color-manager.delete-profile;org.freedesktop.color-manager.modify-device;org.freedesktop.color-manager.modify-profile
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF
+## Also set .xsession for the created user
+RUN if [ -f /etc/skel/.xsession ]; then \
+        cp /etc/skel/.xsession /home/${USERNAME}/.xsession \
+     && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.xsession \
+    ; fi
+
 ## CLEANING APT-FILES
 RUN dpkg --configure -a --force-all 2>/dev/null; apt-get -f install -y 2>/dev/null; apt autoremove -y; apt autoclean
 
