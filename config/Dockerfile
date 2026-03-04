@@ -171,9 +171,15 @@ RUN if [ "$NVME" = "yes" ]; then \
     ; fi
 
 ## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
-RUN dpkg --configure -a --force-all 2>/dev/null; apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
+RUN dpkg --remove --force-remove-reinstreq radxa-overlays-dkms 2>/dev/null || true \
+ && apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
  && adduser xrdp ssl-cert \
  && systemctl enable xrdp
+RUN if [ "$KERNEL" = "radxa" ]; then \
+        apt-get download radxa-overlays-dkms 2>/dev/null; \
+        dpkg --force-depends --force-configure-any -i radxa-overlays-dkms_*.deb 2>/dev/null || true; \
+        rm -f *.deb \
+    ; fi
 RUN if [[ $DESKTOP == "xfce4" ]]; then \
         echo "xfce4-session" > /etc/skel/.xsession \
     ; fi
