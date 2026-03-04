@@ -162,8 +162,7 @@ RUN if [ "$NVME" = "yes" ]; then \
     ; fi
 
 ## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
-RUN apt-get install -y xrdp \
- && sed -i 's/^port=3389/port=3389/' /etc/xrdp/xrdp.ini \
+RUN apt-get install -y ssl-cert xrdp xorgxrdp \
  && adduser xrdp ssl-cert \
  && systemctl enable xrdp
 RUN if [[ $DESKTOP == "xfce4" ]]; then \
