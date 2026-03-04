@@ -115,6 +115,11 @@ RUN echo "ALGO=zstd" > /etc/default/zramswap \
 ## CONFIGURE THE KERNEL COMMANDLINE
 RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 elevator=mq-deadline" > /etc/kernel/cmdline
 
+## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
+RUN apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
+ && adduser xrdp ssl-cert \
+ && systemctl enable xrdp
+
 ## KERNEL INSTALLATION
 RUN if [ "$KERNEL" = "radxa" ]; then \
         apt-get download linux-image-rock-4se linux-image-6.1.115-8-rk2501 radxa-overlays-dkms 2>/dev/null; \
@@ -161,16 +166,6 @@ RUN if [ "$NVME" = "yes" ]; then \
         rm /usr/local/bin/migrate-to-nvme.sh /etc/systemd/system/nvme-migrate.service \
     ; fi
 
-## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
-RUN dpkg --purge --force-all radxa-overlays-dkms 2>/dev/null; \
-    apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
- && adduser xrdp ssl-cert \
- && systemctl enable xrdp
-RUN if [ "$KERNEL" = "radxa" ]; then \
-        apt-get download radxa-overlays-dkms 2>/dev/null; \
-        dpkg --force-depends --force-configure-any -i radxa-overlays-dkms_*.deb 2>/dev/null || true; \
-        rm -f *.deb \
-    ; fi
 RUN if [[ $DESKTOP == "xfce4" ]]; then \
         echo "xfce4-session" > /etc/skel/.xsession \
     ; fi
