@@ -35,6 +35,23 @@ RUN rm /root/apt-packages.txt
 COPY config/autoinstaller.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/autoinstaller.sh
 
+## INSTALL WECHAT FOR LINUX
+RUN curl -L -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.deb" \
+ && apt-get install -y /tmp/wechat.deb || true \
+ && apt-get install -fy \
+ && rm -f /tmp/wechat.deb
+
+## INSTALL FCITX5 + GOOGLE PINYIN INPUT METHOD
+RUN apt-get install -y fcitx5 fcitx5-chinese-addons fcitx5-pinyin fcitx5-config-qt fcitx5-frontend-gtk3 fcitx5-frontend-qt5 fcitx5-module-emoji im-config \
+ && im-config -n fcitx5
+RUN mkdir -p /etc/profile.d \
+ && cat > /etc/profile.d/fcitx5.sh <<'EOF'
+export GTK_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=@im=fcitx
+export SDL_IM_MODULE=fcitx
+EOF
+
 ## DESKTOP INSTALLATION
 RUN if [[ $DESKTOP == "xfce4" ]]; then \
     apt install -y xfce4 lightdm xorg firefox-esr network-manager-gnome gvfs-backends pulseaudio pulseaudio-module-bluetooth blueman \
