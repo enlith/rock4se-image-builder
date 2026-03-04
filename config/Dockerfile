@@ -171,7 +171,7 @@ RUN if [ "$NVME" = "yes" ]; then \
     ; fi
 
 ## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
-RUN apt-get install -y ssl-cert xrdp xorgxrdp \
+RUN apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
  && adduser xrdp ssl-cert \
  && systemctl enable xrdp
 RUN if [[ $DESKTOP == "xfce4" ]]; then \
