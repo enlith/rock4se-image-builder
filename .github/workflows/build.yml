@@ -1,0 +1,82 @@
+name: Build Rock 4 SE Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Debian suite'
+        required: true
+        default: 'bookworm'
+        type: choice
+        options: [bookworm, trixie, sid]
+      kernel:
+        description: 'Kernel type'
+        required: true
+        default: 'radxa'
+        type: choice
+        options: [radxa, standard]
+      nvme:
+        description: 'Enable NVMe root migration'
+        required: true
+        default: 'no'
+        type: choice
+        options: ['yes', 'no']
+      desktop:
+        description: 'Desktop environment'
+        required: true
+        default: 'none'
+        type: choice
+        options: [none, xfce4, gnome, mate, cinnamon, lxqt, lxde, budgie, kde]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          sudo apt-get clean
+          df -h /
+
+      - name: Install dependencies
+        run: |
+          chmod +x install.sh
+          sudo ./install.sh
+
+      - name: Build image
+        run: |
+          chmod +x build.sh config/*
+          sudo ./build.sh \
+            -s ${{ inputs.suite }} \
+            -d ${{ inputs.desktop }} \
+            -k ${{ inputs.kernel }} \
+            -H no \
+            -n ${{ inputs.nvme }} \
+            -u debian \
+            -p builder \
+            -b
+
+      - name: Find image
+        id: find
+        run: |
+          IMG=$(ls -t output/*/Debian*.img | head -1)
+          echo "path=$IMG" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename $IMG)" >> "$GITHUB_OUTPUT"
+          ls -lh "$IMG"
+
+      - name: Compress image
+        run: |
+          xz -T0 -9 "${{ steps.find.outputs.path }}"
+          ls -lh "${{ steps.find.outputs.path }}.xz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.find.outputs.name }}.xz
+          path: ${{ steps.find.outputs.path }}.xz
+          retention-days: 14
