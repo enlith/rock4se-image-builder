@@ -24,7 +24,7 @@ SHELL ["/bin/bash", "-c"]
 ## INSTALL ESSETNIALS AND OFTEN USED TOOLS
 RUN apt update -y && apt upgrade -y && apt install -y apt-utils dialog aptitude
 RUN aptitude install -y '?priority(required)' '?priority(important)' '?priority(standard)'
-RUN apt install -y nano wget curl sudo gpg gpg-agent network-manager zip unzip e2fsprogs git zsh zsh-autosuggestions zsh-syntax-highlighting kmod wireless-tools net-tools iproute2 inetutils* initramfs-tools network-manager usbutils tar zip unzip bzip2 u-boot-menu pulseaudio pulseaudio-module-bluetooth ntpsec locales parted util-linux u-boot-tools firmware-brcm80211 iw wireless-regdb bluetooth bluez rsync nvme-cli
+RUN apt install -y nano wget curl sudo gpg gpg-agent network-manager zip unzip e2fsprogs git zsh zsh-autosuggestions zsh-syntax-highlighting kmod wireless-tools net-tools iproute2 inetutils-ping inetutils-traceroute inetutils-tools initramfs-tools network-manager usbutils tar zip unzip bzip2 u-boot-menu pulseaudio pulseaudio-module-bluetooth ntpsec locales parted util-linux u-boot-tools firmware-brcm80211 iw wireless-regdb bluetooth bluez rsync nvme-cli
 
 ## INSTALLATION OF THE DEB-PACKAGES in 'apt-packages.txt'
 COPY config/apt-packages.txt /root
@@ -156,6 +156,9 @@ RUN systemctl disable inetutils-syslogd 2>/dev/null; \
 RUN sed -i 's/^# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen \
  && locale-gen en_US.UTF-8 \
  && echo 'LC_CTYPE=en_US.UTF-8' >> /etc/default/locale
+
+## REMOVE OPENIPMI (not needed on ARM SBC, wastes 17s at boot)
+RUN apt-get remove -y openipmi 2>/dev/null; true
 
 ## SYSCTL TUNINGS FOR SD/eMMC AND 4GB RAM
 RUN echo '# Rock 4 SE optimizations' > /etc/sysctl.d/99-rock4se.conf \
