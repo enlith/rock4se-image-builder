@@ -24,7 +24,7 @@ SHELL ["/bin/bash", "-c"]
 ## INSTALL ESSETNIALS AND OFTEN USED TOOLS
 RUN apt update -y && apt upgrade -y && apt install -y apt-utils dialog aptitude
 RUN aptitude install -y '?priority(required)' '?priority(important)' '?priority(standard)'
-RUN apt install -y nano wget curl sudo gpg gpg-agent network-manager zip unzip e2fsprogs git zsh zsh-autosuggestions zsh-syntax-highlighting kmod wireless-tools net-tools inetutils* initramfs-tools network-manager usbutils tar zip unzip bzip2 u-boot-menu pulseaudio pulseaudio-module-bluetooth ntpsec locales parted util-linux u-boot-tools firmware-brcm80211 iw wireless-regdb bluetooth bluez rsync nvme-cli
+RUN apt install -y nano wget curl sudo gpg gpg-agent network-manager zip unzip e2fsprogs git zsh zsh-autosuggestions zsh-syntax-highlighting kmod wireless-tools net-tools iproute2 inetutils* initramfs-tools network-manager usbutils tar zip unzip bzip2 u-boot-menu pulseaudio pulseaudio-module-bluetooth ntpsec locales parted util-linux u-boot-tools firmware-brcm80211 iw wireless-regdb bluetooth bluez rsync nvme-cli
 
 ## INSTALLATION OF THE DEB-PACKAGES in 'apt-packages.txt'
 COPY config/apt-packages.txt /root
@@ -153,10 +153,25 @@ RUN echo '# Rock 4 SE optimizations' > /etc/sysctl.d/99-rock4se.conf \
  && echo 'vm.dirty_ratio=5' >> /etc/sysctl.d/99-rock4se.conf \
  && echo 'vm.dirty_background_ratio=2' >> /etc/sysctl.d/99-rock4se.conf \
  && echo 'vm.vfs_cache_pressure=75' >> /etc/sysctl.d/99-rock4se.conf \
- && echo 'vm.dirty_writeback_centisecs=500' >> /etc/sysctl.d/99-rock4se.conf
+ && echo 'vm.dirty_writeback_centisecs=500' >> /etc/sysctl.d/99-rock4se.conf \
+ && echo 'kernel.sched_autogroup_enabled=1' >> /etc/sysctl.d/99-rock4se.conf \
+ && echo 'net.core.default_qdisc=fq' >> /etc/sysctl.d/99-rock4se.conf \
+ && echo 'net.ipv4.tcp_congestion_control=bbr' >> /etc/sysctl.d/99-rock4se.conf
 
 ## TMPFS FOR /tmp TO REDUCE SD CARD WEAR
 RUN echo 'tmpfs /tmp tmpfs defaults,nosuid,nodev,size=256M 0 0' >> /etc/fstab
+
+## HOSTNAME RESOLUTION
+RUN echo '127.0.1.1     rock4se' >> /etc/hosts
+
+## CAP JOURNALD LOG SIZE
+RUN mkdir -p /etc/systemd/journald.conf.d \
+ && echo '[Journal]' > /etc/systemd/journald.conf.d/size.conf \
+ && echo 'SystemMaxUse=100M' >> /etc/systemd/journald.conf.d/size.conf
+
+## NVMe READ-AHEAD (256KB for sequential throughput)
+RUN echo 'ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/read_ahead_kb}="256"' \
+ > /etc/udev/rules.d/60-nvme-readahead.rules
 
 ## DEFAULT CPU GOVERNOR TO SCHEDUTIL FOR big.LITTLE EFFICIENCY
 RUN mkdir -p /etc/tmpfiles.d \
