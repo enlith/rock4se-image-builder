@@ -147,6 +147,16 @@ RUN if [ "$NVME" = "yes" ]; then \
 ## CLEANING APT-FILES
 RUN dpkg --configure -a --force-all 2>/dev/null; apt-get -f install -y 2>/dev/null; apt autoremove -y; apt autoclean
 
+## DISABLE DUPLICATE SYSLOG (journald handles logging)
+RUN systemctl disable inetutils-syslogd 2>/dev/null; \
+    systemctl mask syslog.socket 2>/dev/null; \
+    true
+
+## FIX LOCALE
+RUN sed -i 's/^# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen \
+ && locale-gen en_US.UTF-8 \
+ && echo 'LC_CTYPE=en_US.UTF-8' >> /etc/default/locale
+
 ## SYSCTL TUNINGS FOR SD/eMMC AND 4GB RAM
 RUN echo '# Rock 4 SE optimizations' > /etc/sysctl.d/99-rock4se.conf \
  && echo 'vm.swappiness=10' >> /etc/sysctl.d/99-rock4se.conf \
