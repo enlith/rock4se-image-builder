@@ -39,19 +39,33 @@ RUN chmod +x /usr/local/bin/autoinstaller.sh
 
 ## INSTALL WECHAT FOR LINUX
 RUN curl -L -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.deb" \
- && apt-get install -y /tmp/wechat.deb || true \
- && apt-get install -fy \
+ && (apt-get install -y /tmp/wechat.deb || apt-get install -fy) \
  && rm -f /tmp/wechat.deb
 
 ## INSTALL FCITX5 + GOOGLE PINYIN INPUT METHOD
 RUN apt-get install -y fcitx5 fcitx5-chinese-addons fcitx5-pinyin fcitx5-config-qt fcitx5-frontend-gtk3 fcitx5-frontend-qt5 fcitx5-module-emoji im-config \
  && im-config -n fcitx5
-RUN mkdir -p /etc/profile.d \
+RUN mkdir -p /etc/profile.d /etc/xdg/autostart \
  && cat > /etc/profile.d/fcitx5.sh <<'EOF'
 export GTK_IM_MODULE=fcitx
 export QT_IM_MODULE=fcitx
 export XMODIFIERS=@im=fcitx
 export SDL_IM_MODULE=fcitx
+EOF
+RUN cp /usr/share/applications/org.fcitx.Fcitx5.desktop /etc/xdg/autostart/ 2>/dev/null \
+ || cat > /etc/xdg/autostart/fcitx5.desktop <<'EOF'
+[Desktop Entry]
+Name=Fcitx 5
+GenericName=Input Method
+Comment=Start Input Method
+Exec=fcitx5
+Icon=org.fcitx.Fcitx5
+Type=Application
+Categories=System;Utility;
+X-GNOME-Autostart-Phase=Applications
+X-GNOME-AutoRestart=false
+X-GNOME-Autostart-Notify=false
+X-KDE-autostart-after=panel
 EOF
 
 ## DESKTOP INSTALLATION
@@ -175,30 +189,17 @@ RUN if [ "$NVME" = "yes" ]; then \
         rm /usr/local/bin/migrate-to-nvme.sh /etc/systemd/system/nvme-migrate.service \
     ; fi
 
-RUN if [[ $DESKTOP == "xfce4" ]]; then \
-        echo "xfce4-session" > /etc/skel/.xsession \
-    ; fi
-RUN if [[ $DESKTOP == "kde" ]]; then \
-        echo "startplasma-x11" > /etc/skel/.xsession \
-    ; fi
-RUN if [[ $DESKTOP == "gnome" ]]; then \
-        echo "gnome-session" > /etc/skel/.xsession \
-    ; fi
-RUN if [[ $DESKTOP == "cinnamon" ]]; then \
-        echo "cinnamon-session" > /etc/skel/.xsession \
-    ; fi
-RUN if [[ $DESKTOP == "mate" ]]; then \
-        echo "mate-session" > /etc/skel/.xsession \
-    ; fi
-RUN if [[ $DESKTOP == "lxqt" ]]; then \
-        echo "startlxqt" > /etc/skel/.xsession \
-    ; fi
-RUN if [[ $DESKTOP == "lxde" ]]; then \
-        echo "startlxde" > /etc/skel/.xsession \
-    ; fi
-RUN if [[ $DESKTOP == "budgie" ]]; then \
-        echo "budgie-desktop" > /etc/skel/.xsession \
-    ; fi
+## SET .xsession FOR XRDP DESKTOP SESSION
+RUN case "$DESKTOP" in \
+        xfce4)    echo "xfce4-session"   ;; \
+        kde)      echo "startplasma-x11" ;; \
+        gnome)    echo "gnome-session"   ;; \
+        cinnamon) echo "cinnamon-session";; \
+        mate)     echo "mate-session"    ;; \
+        lxqt)     echo "startlxqt"      ;; \
+        lxde)     echo "startlxde"      ;; \
+        budgie)   echo "budgie-desktop"  ;; \
+    esac > /etc/skel/.xsession && [ -s /etc/skel/.xsession ] || rm -f /etc/skel/.xsession
 ## POLKIT RULE TO ALLOW COLORD FOR XRDP (prevents auth dialog blocking RDP sessions)
 RUN mkdir -p /etc/polkit-1/localauthority/50-local.d \
  && cat > /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla <<'EOF'
