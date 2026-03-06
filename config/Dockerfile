@@ -173,6 +173,21 @@ RUN mkdir -p /etc/systemd/journald.conf.d \
 RUN echo 'ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/read_ahead_kb}="256"' \
  > /etc/udev/rules.d/60-nvme-readahead.rules
 
+## DISABLE USB AUTOSUSPEND FOR STORAGE DEVICES (prevents disconnects)
+RUN echo 'ACTION=="add", SUBSYSTEM=="usb", ATTR{bInterfaceClass}=="08", ATTR{power/autosuspend_delay_ms}="-1"' \
+ > /etc/udev/rules.d/50-usb-no-autosuspend.rules
+
+## ALLOW SUDO USERS TO MOUNT USB DRIVES WITHOUT PASSWORD
+RUN mkdir -p /etc/polkit-1/localauthority/50-local.d \
+ && cat > /etc/polkit-1/localauthority/50-local.d/10-udisks2-mount.pkla <<'EOF'
+[Allow users to mount USB drives without password]
+Identity=unix-group:sudo
+Action=org.freedesktop.udisks2.filesystem-mount;org.freedesktop.udisks2.filesystem-mount-system;org.freedesktop.udisks2.filesystem-mount-other-seat
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
+EOF
+
 ## DEFAULT CPU GOVERNOR TO SCHEDUTIL FOR big.LITTLE EFFICIENCY
 RUN mkdir -p /etc/tmpfiles.d \
  && echo 'w /sys/devices/system/cpu/cpufreq/policy0/scaling_governor - - - - schedutil' > /etc/tmpfiles.d/cpu-governor.conf \
