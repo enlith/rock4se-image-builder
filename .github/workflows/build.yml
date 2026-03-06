@@ -67,7 +67,11 @@ jobs:
       - name: Find image
         id: find
         run: |
-          IMG=$(ls -t output/*/Debian*.img | head -1)
+          IMG=$(ls -t output/*/Debian*.img 2>/dev/null | head -1)
+          if [ -z "$IMG" ]; then
+            echo "No image file found — build failed"
+            exit 1
+          fi
           echo "path=$IMG" >> "$GITHUB_OUTPUT"
           echo "name=$(basename $IMG)" >> "$GITHUB_OUTPUT"
           ls -lh "$IMG"

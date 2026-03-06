@@ -337,6 +337,13 @@ if [[ "$BUILD" == "yes" ]]; then
     docker rm debiancontainer
     docker rmi debian:finest
     docker build --build-arg "SUITE="$SUITE --build-arg "DESKTOP="$DESKTOP --build-arg "USERNAME="$USERNAME --build-arg "PASSWORD="$PASSWORD --build-arg "KERNEL="$KERNEL --build-arg "HEADERS="$HEADERS --build-arg "NVME="$NVME -t debian:finest -f config/Dockerfile .
+    if [ $? -ne 0 ]; then
+        echo "--------------------------------"
+        echo "SORRY, BUILD WAS NOT SUCCESSFULL"
+        echo "Docker build failed!"
+        echo "--------------------------------"
+        exit 1
+    fi
 # Create a docker container with the previous created docker image
 ##########################################################################################################################    
     docker run -dit --name debiancontainer debian:finest /bin/bash  
@@ -380,7 +387,6 @@ if [[ "$BUILD" == "yes" ]]; then
     dd if=/dev/zero of=$ROOTFS bs=1M count=$((${rootfs_size} + 750)) status=progress
     rm config/rootfs_size.txt
     mkfs.ext4 -L rootfs $ROOTFS -F
-    mkfs.ext4 ${ROOTFS} -L rootfs -F
     mkdir -p .loop/root
     mount ${ROOTFS} .loop/root
     docker export -o .rootfs.tar debiancontainer
