@@ -57,6 +57,9 @@ vm.dirty_background_ratio=10
 vm.vfs_cache_pressure=75
 vm.min_free_kbytes=16384
 vm.dirty_writeback_centisecs=500
+kernel.sched_autogroup_enabled=1
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
 EOF
 
 # Fix ZRAM config (variable names must match zramswap script)
