@@ -89,11 +89,11 @@ RUN chown root:root /root/.zshrc
 RUN chsh -s /bin/zsh ${USERNAME}
 RUN chsh -s /bin/zsh root
 
-## ZRAM
+## ZRAM (variable names must match what /usr/sbin/zramswap expects)
 RUN apt-get install -y zram-tools
-RUN echo '# /etc/default/zramswap' > /etc/default/zramswap
-RUN echo "ZRAM_SWAPSIZE=1024M" >> /etc/default/zramswap
-RUN echo "ZRAM_ALGORITHM=zstd" >> /etc/default/zramswap
+RUN echo "ALGO=zstd" > /etc/default/zramswap \
+ && echo "SIZE=1024" >> /etc/default/zramswap \
+ && echo "PRIORITY=100" >> /etc/default/zramswap
 
 ## CONFIGURE THE KERNEL COMMANDLINE
 RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 elevator=mq-deadline" > /etc/kernel/cmdline

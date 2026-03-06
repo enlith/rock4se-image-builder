@@ -55,6 +55,15 @@ vm.swappiness=10
 vm.dirty_ratio=20
 vm.dirty_background_ratio=10
 vm.vfs_cache_pressure=75
+vm.min_free_kbytes=16384
+vm.dirty_writeback_centisecs=500
+EOF
+
+# Fix ZRAM config (variable names must match zramswap script)
+cat > /mnt/nvme/etc/default/zramswap <<EOF
+ALGO=zstd
+SIZE=1024
+PRIORITY=100
 EOF
 
 # Disable this service on the NVMe copy
