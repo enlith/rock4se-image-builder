@@ -32,7 +32,7 @@ if [ -e /etc/configboot ]; then
   rm /etc/configboot
   reboot
 fi
-if [ -e "/etc/autinstall" ]; then
+if [ -e "/etc/autoinstall" ]; then
   autoinstaller.sh &
 fi
 iwconfig wlan0 txpower 22

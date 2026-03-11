@@ -64,13 +64,23 @@ jobs:
             -s $SUITE -d $DESKTOP -k $KERNEL -H no -n $NVME \
             -u debian -p builder -b
 
-      - name: Find image
+      - name: Verify image
         id: find
         run: |
-          IMG=$(ls -t output/*/Debian*.img | head -1)
+          IMG=$(ls -t output/*/Debian*.img 2>/dev/null | head -1)
+          if [ -z "$IMG" ]; then
+            echo "No image file found after build"
+            exit 1
+          fi
           echo "path=$IMG" >> "$GITHUB_OUTPUT"
           echo "name=$(basename $IMG)" >> "$GITHUB_OUTPUT"
           ls -lh "$IMG"
+
+      - name: Remove validation image
+        if: github.event_name == 'push'
+        run: |
+          rm -f "${{ steps.find.outputs.path }}"
+          rmdir "$(dirname "${{ steps.find.outputs.path }}")" 2>/dev/null || true
 
       - name: Compress image
         if: github.event_name == 'workflow_dispatch'
