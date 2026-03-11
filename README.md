@@ -52,9 +52,17 @@ The SD card remains as the boot device (`/boot`), while NVMe handles everything 
 
 | Option | Flag | Description |
 |---|---|---|
-| Radxa BSP (recommended) | `-k radxa` | Radxa-patched kernel (6.1.x) with full Rock 4 SE hardware support: VPU, ISP, RGA, board-specific DTB |
+| Radxa BSP (recommended) | `-k radxa` | Radxa-patched kernel (6.1.x) with full Rock 4 SE hardware support: VPU, ISP, RGA, board-specific DTB. Bookworm only. |
 | Generic Debian | `-k standard` | Stock Debian arm64 kernel. Works but lacks some Rockchip-specific drivers |
-| Mainline | `-k latest` | Compiles latest mainline kernel from source. Add `-V 6.19.4` to pin a version. Partial RK3399 support |
+| Mainline | `-k latest` | Compiles latest mainline kernel from source. Add `-V 6.19.4` to pin a version. Partial RK3399 support. Not GitHub Actions-validated. |
+
+## Supported build combinations
+- `bookworm + radxa`: supported and CI-validated
+- `bookworm + standard`: supported and CI-validated
+- `trixie + standard`: intended local/manual path, not CI-validated
+- `sid + standard`: intended local/manual path, not CI-validated
+- `bookworm/trixie/sid + latest`: intended local/manual path, not CI-validated
+- `trixie/sid + radxa`: not supported; Radxa Rock 4 SE BSP packages are configured only for `bookworm`
 
 ## CLI Options
 ```
@@ -95,9 +103,9 @@ The following tunings are applied to all builds for the Rock 4 SE (RK3399-T):
 See [FLASH_SD_CARD.md](FLASH_SD_CARD.md) for instructions.
 
 ## CI Builds (GitHub Actions)
-Pushes to `arm64-native-build` run validation builds on GitHub's free arm64 runners and delete the generated image after verification to save runner disk space.
+Pushes to `arm64-native-build` run two validation builds on GitHub's free arm64 runners: `bookworm + radxa` and `bookworm + standard`. Both generated images are deleted after verification to save runner disk space.
 
-Go to **Actions** → **Build Rock 4 SE Image** → **Run workflow** to build an image in the cloud and keep it. Select suite, kernel, NVMe, and desktop options. The image is compressed and uploaded as an artifact for manual workflow runs.
+Go to **Actions** → **Build Rock 4 SE Image** → **Run workflow** to build an image in the cloud and keep it. The manual workflow currently exposes `radxa` and `standard` kernels. `radxa` remains `bookworm`-only. Manual workflow runs compress the finished image and upload it as an artifact.
 
 ## Adding custom packages
 Append package names (one per line) to `config/apt-packages.txt`.

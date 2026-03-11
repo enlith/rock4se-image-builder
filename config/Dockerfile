@@ -68,10 +68,17 @@ RUN if [[ $DESKTOP == "kde" ]]; then \
 RUN bash -c 'curl -L --output deb.deb "https://github.com/radxa-pkg/radxa-archive-keyring/releases/latest/download/radxa-archive-keyring_$(curl -L https://github.com/radxa-pkg/radxa-archive-keyring/releases/latest/download/VERSION)_all.deb"'
 RUN dpkg -i deb.deb
 RUN rm -f deb.deb
-RUN bash -c 'source /etc/os-release'
-RUN bash -c 'tee /etc/apt/sources.list.d/radxa.list <<< "deb [signed-by=/usr/share/keyrings/radxa-archive-keyring.gpg] https://radxa-repo.github.io/bookworm/ bookworm main"'
-RUN bash -c 'tee /etc/apt/sources.list.d/radxa-rk3399t.list <<< "deb [signed-by=/usr/share/keyrings/radxa-archive-keyring.gpg] https://radxa-repo.github.io/rk3399t-bookworm/ rk3399t-bookworm main"'
-RUN apt update -y && apt install -y radxa-firmware rsetup
+RUN if [ "$SUITE" = "bookworm" ]; then \
+        tee /etc/apt/sources.list.d/radxa.list <<< "deb [signed-by=/usr/share/keyrings/radxa-archive-keyring.gpg] https://radxa-repo.github.io/bookworm/ bookworm main" \
+     && tee /etc/apt/sources.list.d/radxa-rk3399t.list <<< "deb [signed-by=/usr/share/keyrings/radxa-archive-keyring.gpg] https://radxa-repo.github.io/rk3399t-bookworm/ rk3399t-bookworm main" \
+     && apt update -y \
+     && apt install -y radxa-firmware rsetup \
+    ; elif [ "$KERNEL" = "radxa" ]; then \
+        echo "Radxa BSP kernel is only supported with SUITE=bookworm" >&2 \
+     && exit 1 \
+    ; else \
+        echo "Skipping bookworm-only Radxa repositories for SUITE=$SUITE" \
+    ; fi
 
 ## Copy the overlay files into the boot folder
 COPY config/overlays /boot

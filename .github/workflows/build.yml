@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       suite:
-        description: 'Debian suite'
+        description: 'Debian suite (radxa kernel is bookworm-only)'
         required: true
         default: 'bookworm'
         type: choice
         options: [bookworm, trixie, sid]
       kernel:
-        description: 'Kernel type'
+        description: 'Kernel type (radxa is bookworm-only)'
         required: true
         default: 'radxa'
         type: choice
@@ -95,3 +95,53 @@ jobs:
           name: ${{ steps.find.outputs.name }}.xz
           path: ${{ steps.find.outputs.path }}.xz
           retention-days: 14
+
+  validate-standard:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    env:
+      SUITE: bookworm
+      KERNEL: standard
+      NVME: no
+      DESKTOP: none
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          sudo apt-get clean
+          df -h /
+
+      - name: Install dependencies
+        run: |
+          chmod +x install.sh
+          sudo ./install.sh
+
+      - name: Build image
+        run: |
+          chmod +x build.sh config/*
+          sudo ./build.sh \
+            -s $SUITE -d $DESKTOP -k $KERNEL -H no -n $NVME \
+            -u debian -p builder -b
+
+      - name: Verify image
+        id: find
+        run: |
+          IMG=$(ls -t output/*/Debian*.img 2>/dev/null | head -1)
+          if [ -z "$IMG" ]; then
+            echo "No image file found after build"
+            exit 1
+          fi
+          echo "path=$IMG" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename $IMG)" >> "$GITHUB_OUTPUT"
+          ls -lh "$IMG"
+
+      - name: Remove validation image
+        run: |
+          rm -f "${{ steps.find.outputs.path }}"
+          rmdir "$(dirname "${{ steps.find.outputs.path }}")" 2>/dev/null || true
