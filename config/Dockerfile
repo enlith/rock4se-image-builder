@@ -174,8 +174,8 @@ RUN echo '# Rock 4 SE optimizations' > /etc/sysctl.d/99-rock4se.conf \
 ## TMPFS FOR /tmp TO REDUCE SD CARD WEAR
 RUN echo 'tmpfs /tmp tmpfs defaults,nosuid,nodev,size=256M 0 0' >> /etc/fstab
 
-## HOSTNAME RESOLUTION
-RUN echo '127.0.1.1     rock4se' >> /etc/hosts
+## DEFAULT HOSTNAME
+RUN echo 'rock4se' > /etc/hostname
 
 ## CAP JOURNALD LOG SIZE
 RUN mkdir -p /etc/systemd/journald.conf.d \
@@ -205,4 +205,3 @@ EOF
 RUN mkdir -p /etc/tmpfiles.d \
  && echo 'w /sys/devices/system/cpu/cpufreq/policy0/scaling_governor - - - - schedutil' > /etc/tmpfiles.d/cpu-governor.conf \
  && echo 'w /sys/devices/system/cpu/cpufreq/policy4/scaling_governor - - - - schedutil' >> /etc/tmpfiles.d/cpu-governor.conf
-

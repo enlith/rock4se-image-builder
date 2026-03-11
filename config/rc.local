@@ -32,6 +32,7 @@ if [ -e /etc/configboot ]; then
   rm /etc/configboot
   reboot
 fi
+grep -qE '^127\.0\.1\.1[[:space:]]+rock4se([[:space:]]|$)' /etc/hosts || echo '127.0.1.1     rock4se' >> /etc/hosts
 if [ -e "/etc/autoinstall" ]; then
   autoinstaller.sh &
 fi
