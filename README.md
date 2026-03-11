@@ -56,13 +56,18 @@ The SD card remains as the boot device (`/boot`), while NVMe handles everything 
 | Generic Debian | `-k standard` | Stock Debian arm64 kernel. Works but lacks some Rockchip-specific drivers |
 | Mainline | `-k latest` | Compiles latest mainline kernel from source. Add `-V 6.19.4` to pin a version. Partial RK3399 support. Not GitHub Actions-validated. |
 
-## Supported build combinations
-- `bookworm + radxa`: supported and CI-validated
-- `bookworm + standard`: supported and CI-validated
-- `trixie + standard`: intended local/manual path, not CI-validated
-- `sid + standard`: intended local/manual path, not CI-validated
-- `bookworm/trixie/sid + latest`: intended local/manual path, not CI-validated
-- `trixie/sid + radxa`: not supported; Radxa Rock 4 SE BSP packages are configured only for `bookworm`
+## Effective suite/kernel combinations
+| Suite | Kernel | Status | Validation / Notes |
+|---|---|---|---|
+| `bookworm` | `radxa` | Supported | Push CI validated and available in manual workflow |
+| `bookworm` | `standard` | Supported | Push CI validated and available in manual workflow |
+| `bookworm` | `latest` | Local/manual only | CLI only, not GitHub Actions-validated |
+| `trixie` | `radxa` | Not supported | Rejected; Radxa Rock 4 SE BSP packages are configured only for `bookworm` |
+| `trixie` | `standard` | Local/manual only | Available in manual workflow and CLI, not push CI-validated |
+| `trixie` | `latest` | Local/manual only | CLI only, not GitHub Actions-validated |
+| `sid` | `radxa` | Not supported | Rejected; Radxa Rock 4 SE BSP packages are configured only for `bookworm` |
+| `sid` | `standard` | Local/manual only | Available in manual workflow and CLI, not push CI-validated |
+| `sid` | `latest` | Local/manual only | CLI only, not GitHub Actions-validated |
 
 ## CLI Options
 ```
