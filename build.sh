@@ -338,14 +338,20 @@ if [[ "$BUILD" == "yes" ]]; then
     docker kill debiancontainer
     docker rm debiancontainer
     docker rmi debian:finest
-    docker build --build-arg "SUITE="$SUITE --build-arg "DESKTOP="$DESKTOP --build-arg "USERNAME="$USERNAME --build-arg "PASSWORD="$PASSWORD --build-arg "KERNEL="$KERNEL --build-arg "HEADERS="$HEADERS --build-arg "NVME="$NVME -t debian:finest -f config/Dockerfile .
-    if [ $? -ne 0 ]; then
+    DOCKER_BUILD_LOG=$(mktemp)
+    docker build --build-arg "SUITE="$SUITE --build-arg "DESKTOP="$DESKTOP --build-arg "USERNAME="$USERNAME --build-arg "PASSWORD="$PASSWORD --build-arg "KERNEL="$KERNEL --build-arg "HEADERS="$HEADERS --build-arg "NVME="$NVME -t debian:finest -f config/Dockerfile . 2>&1 | tee "$DOCKER_BUILD_LOG"
+    DOCKER_BUILD_STATUS=${PIPESTATUS[0]}
+    if [ $DOCKER_BUILD_STATUS -ne 0 ]; then
+        DOCKER_BUILD_TAIL=$(tail -n 20 "$DOCKER_BUILD_LOG" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
         echo "--------------------------------"
         echo "SORRY, BUILD WAS NOT SUCCESSFULL"
         echo "Docker build failed!"
         echo "--------------------------------"
+        echo "::error title=Docker build failed::${DOCKER_BUILD_TAIL}"
+        rm -f "$DOCKER_BUILD_LOG"
         exit 1
     fi
+    rm -f "$DOCKER_BUILD_LOG"
 # Create a docker container with the previous created docker image
 ##########################################################################################################################    
     docker run -dit --name debiancontainer debian:finest /bin/bash  
