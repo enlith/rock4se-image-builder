@@ -15,7 +15,7 @@ usage() {
     echo "  -h, --help                      Show this help message and exit"
     echo "  -s, --suite SUITE               Choose the Debian suite (e.g., testing, experimental, trixie)"
     echo "  -k, --kernel radxa/standard/latest  Choose which kernel to install"
-    echo "                                      radxa: Radxa BSP kernel with full Rock 4 SE hardware support (recommended)"
+    echo "                                      radxa: Radxa BSP kernel with full Rock 4 SE hardware support (bookworm only)"
     echo "                                      standard: Generic Debian arm64 kernel"
     echo "                                      latest: Compile mainline kernel from source"
     echo "  -V, --kernel-version VERSION    Specify kernel version (e.g., 6.19.4) when using latest"
@@ -31,6 +31,14 @@ usage() {
     echo "-------------------------------------------------------------------------------------------------"
     echo "For example: $0 -s sid -d none -k latest -u USERNAME123 -p PASSWORD123 -b"
     exit 1
+}
+
+validate_configuration() {
+    if [ "$KERNEL" = "radxa" ] && [ "$SUITE" != "bookworm" ]; then
+        echo "Unsupported build combination: KERNEL=radxa requires SUITE=bookworm."
+        echo "Radxa BSP packages for Rock 4 SE are currently only configured for bookworm."
+        exit 1
+    fi
 }
 
 # Check if running with sudo
@@ -324,6 +332,8 @@ if [[ "$BUILD" == "yes" ]]; then
             esac
         done < .config
     fi
+
+    validate_configuration
 
 # If latest Kernel was chosen starting the download and building process of the latest availible Linux Kernel
 ##########################################################################################################################
