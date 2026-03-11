@@ -95,7 +95,9 @@ The following tunings are applied to all builds for the Rock 4 SE (RK3399-T):
 See [FLASH_SD_CARD.md](FLASH_SD_CARD.md) for instructions.
 
 ## CI Builds (GitHub Actions)
-Go to **Actions** → **Build Rock 4 SE Image** → **Run workflow** to build an image in the cloud on GitHub's free arm64 runners. Select suite, kernel, NVMe, and desktop options. The compressed image is uploaded as an artifact.
+Pushes to `arm64-native-build` run validation builds on GitHub's free arm64 runners and delete the generated image after verification to save runner disk space.
+
+Go to **Actions** → **Build Rock 4 SE Image** → **Run workflow** to build an image in the cloud and keep it. Select suite, kernel, NVMe, and desktop options. The image is compressed and uploaded as an artifact for manual workflow runs.
 
 ## Adding custom packages
 Append package names (one per line) to `config/apt-packages.txt`.
