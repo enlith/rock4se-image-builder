@@ -2,7 +2,7 @@ name: Build Rock 4 SE Image
 
 on:
   push:
-    branches: [arm64-native-build]
+    branches: [arm64-native-build, weixin]
     paths-ignore: ['*.md', 'LICENSE', '.gitignore']
   workflow_dispatch:
     inputs:
