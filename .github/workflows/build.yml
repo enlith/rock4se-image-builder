@@ -32,15 +32,16 @@ on:
         options: [none, xfce4, gnome, mate, cinnamon, lxqt, lxde, budgie, kde]
 
 jobs:
-  build:
+  validate-radxa:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/arm64-native-build'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
 
     env:
-      SUITE: ${{ inputs.suite || 'bookworm' }}
-      KERNEL: ${{ inputs.kernel || 'radxa' }}
-      NVME: ${{ inputs.nvme || 'no' }}
-      DESKTOP: ${{ inputs.desktop || 'none' }}
+      SUITE: bookworm
+      KERNEL: radxa
+      NVME: no
+      DESKTOP: none
 
     steps:
       - name: Checkout
@@ -65,39 +66,17 @@ jobs:
             -u debian -p builder -b
 
       - name: Verify image
-        id: find
         run: |
           IMG=$(ls -t output/*/Debian*.img 2>/dev/null | head -1)
           if [ -z "$IMG" ]; then
             echo "No image file found after build"
             exit 1
           fi
-          echo "path=$IMG" >> "$GITHUB_OUTPUT"
-          echo "name=$(basename $IMG)" >> "$GITHUB_OUTPUT"
           ls -lh "$IMG"
-
-      - name: Remove validation image
-        if: github.event_name == 'push'
-        run: |
-          rm -f "${{ steps.find.outputs.path }}"
-          rmdir "$(dirname "${{ steps.find.outputs.path }}")" 2>/dev/null || true
-
-      - name: Compress image
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          xz -T0 -9 "${{ steps.find.outputs.path }}"
-          ls -lh "${{ steps.find.outputs.path }}.xz"
-
-      - name: Upload artifact
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.find.outputs.name }}.xz
-          path: ${{ steps.find.outputs.path }}.xz
-          retention-days: 14
+          rm -f "$IMG"
 
   validate-standard:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/arm64-native-build'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
 
@@ -130,6 +109,92 @@ jobs:
             -u debian -p builder -b
 
       - name: Verify image
+        run: |
+          IMG=$(ls -t output/*/Debian*.img 2>/dev/null | head -1)
+          if [ -z "$IMG" ]; then
+            echo "No image file found after build"
+            exit 1
+          fi
+          ls -lh "$IMG"
+          rm -f "$IMG"
+
+  validate-weixin:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/weixin'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    env:
+      SUITE: bookworm
+      KERNEL: radxa
+      NVME: no
+      DESKTOP: xfce4
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          sudo apt-get clean
+          df -h /
+
+      - name: Install dependencies
+        run: |
+          chmod +x install.sh
+          sudo ./install.sh
+
+      - name: Build image
+        run: |
+          chmod +x build.sh config/*
+          sudo ./build.sh \
+            -s $SUITE -d $DESKTOP -k $KERNEL -H no -n $NVME \
+            -u debian -p builder -b
+
+      - name: Verify image
+        run: |
+          IMG=$(ls -t output/*/Debian*.img 2>/dev/null | head -1)
+          if [ -z "$IMG" ]; then
+            echo "No image file found after build"
+            exit 1
+          fi
+          ls -lh "$IMG"
+          rm -f "$IMG"
+
+  build:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    env:
+      SUITE: ${{ inputs.suite }}
+      KERNEL: ${{ inputs.kernel }}
+      NVME: ${{ inputs.nvme }}
+      DESKTOP: ${{ inputs.desktop }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          sudo apt-get clean
+          df -h /
+
+      - name: Install dependencies
+        run: |
+          chmod +x install.sh
+          sudo ./install.sh
+
+      - name: Build image
+        run: |
+          chmod +x build.sh config/*
+          sudo ./build.sh \
+            -s $SUITE -d $DESKTOP -k $KERNEL -H no -n $NVME \
+            -u debian -p builder -b
+
+      - name: Verify image
         id: find
         run: |
           IMG=$(ls -t output/*/Debian*.img 2>/dev/null | head -1)
@@ -141,7 +206,14 @@ jobs:
           echo "name=$(basename $IMG)" >> "$GITHUB_OUTPUT"
           ls -lh "$IMG"
 
-      - name: Remove validation image
+      - name: Compress image
         run: |
-          rm -f "${{ steps.find.outputs.path }}"
-          rmdir "$(dirname "${{ steps.find.outputs.path }}")" 2>/dev/null || true
+          xz -T0 -9 "${{ steps.find.outputs.path }}"
+          ls -lh "${{ steps.find.outputs.path }}.xz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.find.outputs.name }}.xz
+          path: ${{ steps.find.outputs.path }}.xz
+          retention-days: 14
