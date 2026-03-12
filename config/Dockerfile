@@ -149,7 +149,8 @@ RUN if [ "$KERNEL" = "radxa" ]; then \
     ; fi
 
 ## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS (after kernel to avoid dkms conflicts)
-RUN apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
+RUN dpkg --configure -a --force-all 2>/dev/null; apt-get -f install -y \
+ && apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
  && adduser xrdp ssl-cert \
  && systemctl enable xrdp
 RUN if [ "$KERNEL" = "radxa" ] && [ "$HEADERS" = "yes" ]; then \
