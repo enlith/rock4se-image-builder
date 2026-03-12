@@ -141,16 +141,16 @@ RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw
 
 ## KERNEL INSTALLATION
 RUN if [ "$KERNEL" = "radxa" ]; then \
-        apt-get download linux-image-rock-4se linux-image-6.1.115-8-rk2501 radxa-overlays-dkms 2>/dev/null; \
-        dpkg --force-depends --force-configure-any -i linux-image-6.1.115-8-rk2501_*.deb || true; \
-        dpkg --force-depends --force-configure-any -i radxa-overlays-dkms_*.deb || true; \
-        dpkg --force-depends --force-configure-any -i linux-image-rock-4se_*.deb || true; \
-        rm -f *.deb \
+        apt-get install -y dkms \
+     && apt-get download linux-image-rock-4se linux-image-6.1.115-8-rk2501 radxa-overlays-dkms 2>/dev/null \
+     && dpkg -i linux-image-6.1.115-8-rk2501_*.deb \
+     && dpkg -i radxa-overlays-dkms_*.deb \
+     && dpkg -i linux-image-rock-4se_*.deb \
+     && rm -f *.deb \
     ; fi
 
-## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS (after kernel to avoid dkms conflicts)
-RUN dpkg --configure -a --force-all 2>/dev/null; apt-get -f install -y \
- && apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
+## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
+RUN apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
  && adduser xrdp ssl-cert \
  && systemctl enable xrdp
 RUN if [ "$KERNEL" = "radxa" ] && [ "$HEADERS" = "yes" ]; then \
