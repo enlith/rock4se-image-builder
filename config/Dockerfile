@@ -38,8 +38,9 @@ COPY config/autoinstaller.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/autoinstaller.sh
 
 ## INSTALL WECHAT FOR LINUX
-RUN curl -L -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.deb" \
- && (apt-get install -y /tmp/wechat.deb || apt-get install -fy) \
+RUN curl -fL -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.deb" \
+ && echo "WeChat version: $(dpkg-deb -f /tmp/wechat.deb Version)" \
+ && apt-get install -y /tmp/wechat.deb \
  && rm -f /tmp/wechat.deb
 
 ## INSTALL FCITX5 + GOOGLE PINYIN INPUT METHOD
