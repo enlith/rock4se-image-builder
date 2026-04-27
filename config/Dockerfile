@@ -153,7 +153,8 @@ RUN if [ "$KERNEL" = "radxa" ]; then \
 ## INSTALL XRDP FOR WINDOWS REMOTE DESKTOP ACCESS
 RUN apt-get install -y ssl-cert libfuse2 xrdp xorgxrdp \
  && adduser xrdp ssl-cert \
- && systemctl enable xrdp
+ && systemctl enable xrdp \
+ && systemctl disable lightdm
 RUN if [ "$KERNEL" = "radxa" ] && [ "$HEADERS" = "yes" ]; then \
         apt install -y linux-headers-rock-4se || true \
     ; fi

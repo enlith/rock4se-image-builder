@@ -11,7 +11,7 @@
 
 
 if [ -e /etc/configboot ]; then
-  if dpkg-query -W "lightdm" >/dev/null 2>&1; then
+  if dpkg-query -W "lightdm" >/dev/null 2>&1 && ! dpkg-query -W "xrdp" >/dev/null 2>&1; then
     systemctl enable lightdm
     dpkg-reconfigure lightdm
   fi
