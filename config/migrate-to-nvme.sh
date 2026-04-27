@@ -46,7 +46,7 @@ cat >> /mnt/nvme/etc/fstab <<EOF
 EOF
 
 # Update kernel cmdline on NVMe copy for NVMe-optimized settings
-echo "root=/dev/nvme0n1p1 console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1" > /mnt/nvme/etc/kernel/cmdline
+echo "root=/dev/nvme0n1p1 console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw consoleblank=0 console=tty1 coherent_pool=2M cma=128M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1" > /mnt/nvme/etc/kernel/cmdline
 
 # NVMe-optimized sysctl (higher dirty ratios since NVMe is fast)
 cat > /mnt/nvme/etc/sysctl.d/99-rock4se.conf <<EOF
