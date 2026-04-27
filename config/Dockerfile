@@ -105,7 +105,7 @@ RUN echo "ALGO=zstd" > /etc/default/zramswap \
  && echo "PRIORITY=100" >> /etc/default/zramswap
 
 ## CONFIGURE THE KERNEL COMMANDLINE
-RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw consoleblank=0 console=tty1 coherent_pool=2M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 elevator=mq-deadline" > /etc/kernel/cmdline
+RUN echo "root=LABEL=rootfs console=ttyFIQ0,1500000n8 quiet splash loglevel=1 rw consoleblank=0 console=tty1 coherent_pool=2M cma=128M irqchip.gicv3_pseudo_nmi=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1 elevator=mq-deadline" > /etc/kernel/cmdline
 
 ## KERNEL INSTALLATION
 RUN if [ "$KERNEL" = "radxa" ]; then \
