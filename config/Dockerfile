@@ -117,6 +117,10 @@ RUN if [[ $KERNEL == "standard" ]]; then \
     rm /boot/kernelupdater.sh \
     ; fi
 
+## INSTALL fake-hwclock TO PERSIST TIME ACROSS REBOOTS
+## (RK808 RTC has no battery backup, defaults to 2013 on cold boot which breaks NM DHCP renewal)
+RUN apt-get install -y fake-hwclock
+
 ## CLEANING APT-FILES
 RUN apt autoremove -y && apt autoclean
 
